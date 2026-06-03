@@ -9,6 +9,8 @@ import { SurveyInputPayload } from "@/types/survey";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
+const MIN_ANALYZING_MS = 1500;
+
 export default function AnalyzingPage() {
   const router = useRouter();
   const [error, setError] = useState("");
@@ -16,6 +18,7 @@ export default function AnalyzingPage() {
 
   useEffect(() => {
     async function run() {
+      const startTime = Date.now();
       const payloadRaw = window.sessionStorage.getItem(STORAGE_KEYS.pendingPayload);
       if (!payloadRaw) {
         router.replace("/survey");
@@ -24,6 +27,11 @@ export default function AnalyzingPage() {
       const payload = JSON.parse(payloadRaw) as SurveyInputPayload;
       try {
         const result = await predictMentalHealthRisk(payload);
+        const elapsed = Date.now() - startTime;
+        const remaining = Math.max(0, MIN_ANALYZING_MS - elapsed);
+        if (remaining > 0) {
+          await new Promise((resolve) => window.setTimeout(resolve, remaining));
+        }
         window.sessionStorage.setItem(STORAGE_KEYS.latestResult, JSON.stringify(result));
         router.replace(`/result/${result.id}`);
       } catch (e) {

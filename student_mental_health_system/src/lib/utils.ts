@@ -1,5 +1,10 @@
 import { calculateGAD7Score, calculatePHQ9Score } from "@/lib/scoring";
-import { SurveyAnswers, SurveyInputPayload, SurveySection } from "@/types/survey";
+import {
+  SurveyAnsweredState,
+  SurveyAnswers,
+  SurveyInputPayload,
+  SurveySection,
+} from "@/types/survey";
 
 function parseRequiredNumber(answers: SurveyAnswers, key: string) {
   const value = Number(answers[key]);
@@ -9,9 +14,17 @@ function parseRequiredNumber(answers: SurveyAnswers, key: string) {
   return value;
 }
 
-export function validateSection(answers: SurveyAnswers, section: SurveySection): string[] {
+export function validateSection(
+  answers: SurveyAnswers,
+  answered: SurveyAnsweredState,
+  section: SurveySection,
+): string[] {
   const issues: string[] = [];
   for (const q of section.questions) {
+    if (!answered[q.id]) {
+      issues.push(`${q.id} is required.`);
+      continue;
+    }
     const val = Number(answers[q.id]);
     if (Number.isNaN(val)) {
       issues.push(`${q.id} is required.`);
@@ -24,14 +37,27 @@ export function validateSection(answers: SurveyAnswers, section: SurveySection):
   return issues;
 }
 
-export function validateAllSections(answers: SurveyAnswers, sections: SurveySection[]) {
-  return sections.flatMap((section) => validateSection(answers, section));
+export function validateAllSections(
+  answers: SurveyAnswers,
+  answered: SurveyAnsweredState,
+  sections: SurveySection[],
+) {
+  return sections.flatMap((section) => validateSection(answers, answered, section));
 }
 
 export function createInitialAnswers(sections: SurveySection[]): SurveyAnswers {
   return sections.reduce<SurveyAnswers>((acc, section) => {
     for (const question of section.questions) {
       acc[question.id] = question.min;
+    }
+    return acc;
+  }, {});
+}
+
+export function createInitialAnsweredState(sections: SurveySection[]): SurveyAnsweredState {
+  return sections.reduce<SurveyAnsweredState>((acc, section) => {
+    for (const question of section.questions) {
+      acc[question.id] = false;
     }
     return acc;
   }, {});

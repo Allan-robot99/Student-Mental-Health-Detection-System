@@ -5,9 +5,15 @@ import Card from "@/components/common/Card";
 import ProgressBar from "@/components/common/ProgressBar";
 import QuestionGroup from "@/components/survey/QuestionGroup";
 import { surveySections } from "@/lib/surveyQuestions";
-import { buildPayload, createInitialAnswers, validateAllSections, validateSection } from "@/lib/utils";
+import {
+  buildPayload,
+  createInitialAnsweredState,
+  createInitialAnswers,
+  validateAllSections,
+  validateSection,
+} from "@/lib/utils";
 import { STORAGE_KEYS } from "@/lib/constants";
-import { SurveyAnswers } from "@/types/survey";
+import { SurveyAnsweredState, SurveyAnswers } from "@/types/survey";
 import { useRouter } from "next/navigation";
 import { FormEvent, useMemo, useState } from "react";
 
@@ -15,17 +21,33 @@ export default function SurveyForm() {
   const router = useRouter();
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<SurveyAnswers>(() => createInitialAnswers(surveySections));
+  const [answered, setAnswered] = useState<SurveyAnsweredState>(() =>
+    createInitialAnsweredState(surveySections),
+  );
   const [error, setError] = useState<string>("");
 
   const section = surveySections[step];
   const isLast = step === surveySections.length - 1;
   const showUrgent = Number(answers.phq9_q9 || 0) > 0;
 
-  const issues = useMemo(() => validateSection(answers, section), [answers, section]);
+  const issues = useMemo(
+    () => validateSection(answers, answered, section),
+    [answers, answered, section],
+  );
 
   function onSubmit(e: FormEvent) {
     e.preventDefault();
-    const allIssues = validateAllSections(answers, surveySections);
+    if (!isLast) {
+      if (issues.length > 0) {
+        setError(issues[0]);
+        return;
+      }
+      setError("");
+      setStep((v) => v + 1);
+      return;
+    }
+
+    const allIssues = validateAllSections(answers, answered, surveySections);
     if (allIssues.length > 0) {
       setError(allIssues[0]);
       return;
@@ -47,7 +69,15 @@ export default function SurveyForm() {
   }
 
   return (
-    <form onSubmit={onSubmit} className="space-y-4">
+    <form
+      onSubmit={onSubmit}
+      onKeyDown={(event) => {
+        if (event.key === "Enter") {
+          event.preventDefault();
+        }
+      }}
+      className="space-y-4"
+    >
       <ProgressBar current={step + 1} total={surveySections.length} />
       {showUrgent && (
         <div className="rounded-md border border-orange-300 bg-orange-50 p-3 text-sm text-orange-700">
@@ -65,7 +95,10 @@ export default function SurveyForm() {
               <QuestionGroup
                 question={question}
                 value={answers[question.id]}
-                onChange={(value) => setAnswers((prev) => ({ ...prev, [question.id]: value }))}
+                onChange={(value) => {
+                  setAnswers((prev) => ({ ...prev, [question.id]: value }));
+                  setAnswered((prev) => ({ ...prev, [question.id]: true }));
+                }}
               />
             </div>
           ))}

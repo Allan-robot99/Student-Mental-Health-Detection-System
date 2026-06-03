@@ -1,6 +1,7 @@
 export type SurveyAnswerValue = string | number;
 
 export type SurveyAnswers = Record<string, SurveyAnswerValue>;
+export type SurveyAnsweredState = Record<string, boolean>;
 
 export type SurveyInputPayload = {
   user_name: string;
