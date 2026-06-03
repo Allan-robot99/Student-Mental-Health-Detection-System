@@ -1,0 +1,100 @@
+"use client";
+
+import Footer from "@/components/common/Footer";
+import Navbar from "@/components/common/Navbar";
+import { predictMentalHealthRisk } from "@/lib/api";
+import { STORAGE_KEYS } from "@/lib/constants";
+import { PredictionResponse } from "@/types/prediction";
+import { SurveyInputPayload } from "@/types/survey";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+
+export default function AnalyzingPage() {
+  const router = useRouter();
+  const [error, setError] = useState("");
+  const [fallbackResult, setFallbackResult] = useState<PredictionResponse | null>(null);
+
+  useEffect(() => {
+    async function run() {
+      const payloadRaw = window.sessionStorage.getItem(STORAGE_KEYS.pendingPayload);
+      if (!payloadRaw) {
+        router.replace("/survey");
+        return;
+      }
+      const payload = JSON.parse(payloadRaw) as SurveyInputPayload;
+      try {
+        const result = await predictMentalHealthRisk(payload);
+        window.sessionStorage.setItem(STORAGE_KEYS.latestResult, JSON.stringify(result));
+        router.replace(`/result/${result.id}`);
+      } catch (e) {
+        const message = e instanceof Error ? e.message : "Prediction failed";
+        console.error("Prediction request failed", {
+          error: e,
+          backendUrl: process.env.NEXT_PUBLIC_BACKEND_URL,
+          payload,
+        });
+        setError(message);
+        const fallback: PredictionResponse = {
+          id: `local-${Date.now()}`,
+          prediction: payload.PHQ9_score + payload.GAD7_score > 20 ? 1 : 0,
+          label: payload.PHQ9_score + payload.GAD7_score > 20 ? "High Risk" : "Low Risk",
+          confidence: null,
+          suggestions: {
+            supportive_message:
+              "Thanks for completing the self-check. We could not reach the server, so this is a temporary local result.",
+            possible_factors: ["Academic stress", "Sleep pattern", "Emotional load"],
+            activities: [
+              "Break assignments into small tasks.",
+              "Take a short walk or stretch break.",
+              "Pause screen time before sleep.",
+              "Try a 5-minute breathing exercise.",
+              "Reach out to a trusted friend.",
+            ],
+            study_suggestion: "Use a short priority list and finish one small task at a time.",
+            sleep_suggestion: "Keep a consistent sleep and wake time this week.",
+            support_suggestion: "If stress feels hard to manage, contact your university counselor.",
+            disclaimer: "This result is not a medical diagnosis.",
+          },
+        };
+        setFallbackResult(fallback);
+      }
+    }
+    run();
+  }, [router]);
+
+  return (
+    <div className="min-h-screen flex flex-col">
+      <Navbar />
+      <main className="container-page py-16 flex-1">
+        <h1 className="text-2xl font-semibold mb-3">Analyzing your response...</h1>
+        <p className="text-slate-700">Generating your mental health risk result...</p>
+        <p className="text-slate-700">Preparing personalized suggestions...</p>
+        {error ? (
+          <div className="mt-6 rounded-md border border-red-200 bg-red-50 p-4">
+            <p className="text-sm font-semibold text-red-700">Prediction request failed.</p>
+            <p className="mt-2 text-sm text-red-600">Exact error: {error}</p>
+            <p className="mt-2 text-sm text-slate-700">
+              Open the browser console on this device to inspect the logged failure details.
+            </p>
+            {fallbackResult ? (
+              <button
+                type="button"
+                onClick={() => {
+                  window.sessionStorage.setItem(
+                    STORAGE_KEYS.latestResult,
+                    JSON.stringify(fallbackResult),
+                  );
+                  router.replace(`/result/${fallbackResult.id}`);
+                }}
+                className="mt-4 rounded-md bg-[var(--high-risk)] px-4 py-2 text-sm font-medium text-white transition hover:opacity-90"
+              >
+                Continue with temporary local result
+              </button>
+            ) : null}
+          </div>
+        ) : null}
+      </main>
+      <Footer />
+    </div>
+  );
+}
