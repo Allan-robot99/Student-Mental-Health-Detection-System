@@ -1,0 +1,10 @@
+django
+djangorestframework
+django-cors-headers
+gunicorn
+pandas
+numpy
+scikit-learn
+joblib
+python-dotenv
+psycopg2-binary
