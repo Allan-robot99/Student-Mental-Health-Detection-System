@@ -32,3 +32,87 @@ a {
   max-width: 1100px;
   padding: 0 1rem;
 }
+
+.landing-surface {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.99), rgba(239, 248, 255, 0.92));
+  box-shadow: 0 18px 36px rgba(15, 23, 42, 0.06);
+}
+
+.landing-card {
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+}
+
+.landing-icon-badge {
+  display: inline-flex;
+  height: 3.75rem;
+  width: 3.75rem;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  background: linear-gradient(180deg, #d8f3f3, #eef9ff);
+  color: var(--primary);
+  font-weight: 700;
+}
+
+.landing-icon-badge--small {
+  height: 3rem;
+  width: 3rem;
+  font-size: 0.875rem;
+}
+
+.landing-step-badge {
+  display: inline-flex;
+  height: 3rem;
+  width: 3rem;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  background: linear-gradient(180deg, #7fd6d1, #bdebe7);
+  color: white;
+  font-size: 1.125rem;
+  font-weight: 700;
+}
+
+.landing-section-heading {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.landing-section-line {
+  height: 1px;
+  flex: 1;
+  background: #dbeafe;
+}
+
+.result-page {
+  max-width: 1440px;
+}
+
+.result-surface {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.98));
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+}
+
+.result-hero-grid {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.result-illustration-card {
+  min-height: 320px;
+}
+
+@media (min-width: 1024px) {
+  .result-hero-grid {
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+    align-items: stretch;
+  }
+
+  .result-illustration-card {
+    min-height: 560px;
+  }
+}

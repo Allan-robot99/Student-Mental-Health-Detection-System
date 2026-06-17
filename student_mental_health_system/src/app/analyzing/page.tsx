@@ -15,6 +15,7 @@ export default function AnalyzingPage() {
   const router = useRouter();
   const [error, setError] = useState("");
   const [fallbackResult, setFallbackResult] = useState<PredictionResponse | null>(null);
+  const [debugDetails, setDebugDetails] = useState("");
 
   useEffect(() => {
     async function run() {
@@ -36,12 +37,18 @@ export default function AnalyzingPage() {
         router.replace(`/result/${result.id}`);
       } catch (e) {
         const message = e instanceof Error ? e.message : "Prediction failed";
-        console.error("Prediction request failed", {
-          error: e,
+        const debugPayload = {
+          message,
           backendUrl: process.env.NEXT_PUBLIC_BACKEND_URL,
           payload,
-        });
+          rawError:
+            e instanceof Error
+              ? { name: e.name, message: e.message, stack: e.stack }
+              : String(e),
+        };
+        console.warn("Prediction request failed", debugPayload);
         setError(message);
+        setDebugDetails(JSON.stringify(debugPayload, null, 2));
         const fallback: PredictionResponse = {
           id: `local-${Date.now()}`,
           prediction: payload.PHQ9_score + payload.GAD7_score > 20 ? 1 : 0,
@@ -50,10 +57,32 @@ export default function AnalyzingPage() {
           suggestions: {
             supportive_message:
               "Thanks for completing the self-check. We could not reach the server, so this is a temporary local result.",
-            possible_factors: ["Academic stress", "Sleep pattern", "Emotional load"],
+            possible_factors: [
+              {
+                name: "Academic Stress",
+                level: "Moderate",
+                explanation:
+                  "Academic demands may be putting noticeable pressure on your energy and concentration.",
+                suggestion: "Use short work blocks and set one small study goal at a time.",
+              },
+              {
+                name: "Sleep Pattern",
+                level: "Mild",
+                explanation:
+                  "Some sleep-pattern issues may be affecting your daily wellbeing.",
+                suggestion: "Keep a more consistent sleep and wake time over the next few days.",
+              },
+              {
+                name: "Emotional Load",
+                level: "Mild",
+                explanation:
+                  "Your responses suggest some emotional strain that may still deserve attention.",
+                suggestion: "Use a small daily reset such as breathing, journaling, or talking with someone.",
+              },
+            ],
             activities: [
-              "Break assignments into small tasks.",
-              "Take a short walk or stretch break.",
+                "Break assignments into small tasks.",
+                "Take a short walk or stretch break.",
               "Pause screen time before sleep.",
               "Try a 5-minute breathing exercise.",
               "Reach out to a trusted friend.",
@@ -84,6 +113,11 @@ export default function AnalyzingPage() {
             <p className="mt-2 text-sm text-slate-700">
               Open the browser console on this device to inspect the logged failure details.
             </p>
+            {debugDetails ? (
+              <pre className="mt-3 overflow-x-auto rounded bg-white/70 p-3 text-xs text-slate-700">
+                {debugDetails}
+              </pre>
+            ) : null}
             {fallbackResult ? (
               <button
                 type="button"

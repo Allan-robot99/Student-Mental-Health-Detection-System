@@ -1,5 +1,12 @@
 import { SurveyAnswers } from "@/types/survey";
 
+function assertScoreRange(label: string, value: number, min: number, max: number) {
+  if (value < min || value > max) {
+    throw new Error(`${label} must be between ${min} and ${max}.`);
+  }
+  return value;
+}
+
 export function calculatePHQ9Score(answers: SurveyAnswers) {
   const keys = [
     "phq9_q1",
@@ -12,7 +19,8 @@ export function calculatePHQ9Score(answers: SurveyAnswers) {
     "phq9_q8",
     "phq9_q9",
   ];
-  return keys.reduce((total, key) => total + Number(answers[key] || 0), 0);
+  const score = keys.reduce((total, key) => total + Number(answers[key] || 0), 0);
+  return assertScoreRange("PHQ9_score", score, 0, 27);
 }
 
 export function calculateGAD7Score(answers: SurveyAnswers) {
@@ -25,5 +33,6 @@ export function calculateGAD7Score(answers: SurveyAnswers) {
     "gad7_q6",
     "gad7_q7",
   ];
-  return keys.reduce((total, key) => total + Number(answers[key] || 0), 0);
+  const score = keys.reduce((total, key) => total + Number(answers[key] || 0), 0);
+  return assertScoreRange("GAD7_score", score, 0, 21);
 }

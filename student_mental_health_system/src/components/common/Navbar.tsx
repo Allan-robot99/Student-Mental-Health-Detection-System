@@ -12,6 +12,7 @@ export default function Navbar() {
         <nav className="flex items-center gap-4 text-sm text-slate-700">
           <Link href="/about">About</Link>
           <Link href="/consent">Consent</Link>
+          <Link href="/#support">Support</Link>
         </nav>
       </div>
     </header>

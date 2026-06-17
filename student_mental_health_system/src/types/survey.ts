@@ -24,6 +24,17 @@ export type SurveyInputPayload = {
 
 export type QuestionType = "scale" | "number" | "slider";
 
+export type SurveyOption = {
+  label: string;
+  value: number;
+};
+
+export type SurveyValueLabel = {
+  min: number;
+  max: number;
+  label: string;
+};
+
 export type SurveyQuestion = {
   id: string;
   text: string;
@@ -31,10 +42,23 @@ export type SurveyQuestion = {
   min: number;
   max: number;
   step?: number;
+  options?: SurveyOption[];
+  helperText?: string;
+  requiredMessage?: string;
+  leftLabel?: string;
+  rightLabel?: string;
+  valueLabels?: SurveyValueLabel[];
+  selectedPrefix?: string;
+  iconToken?: string;
 };
 
 export type SurveySection = {
   id: string;
   title: string;
+  stepLabel: string;
+  displayTitle: string;
+  description: string;
+  completionNoun: "questions" | "fields";
+  instruction?: string;
   questions: SurveyQuestion[];
 };
