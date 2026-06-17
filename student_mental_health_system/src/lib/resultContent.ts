@@ -209,7 +209,9 @@ export function mapPossibleFactors(
     }));
   }
 
-  return factors.map((factor) => {
+  const stringFactors = factors as string[];
+
+  return stringFactors.map((factor) => {
     const parsed = parseFactor(factor);
     const config = FACTOR_LOOKUP[normalizeFactorKey(parsed.baseName)];
 
